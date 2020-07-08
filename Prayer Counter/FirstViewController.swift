@@ -11,19 +11,79 @@ import ImageIO
 import AVFoundation
 import AVKit
 
-class FirstViewController: UIViewController {
-    
-    
+class FirstViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDelegate {
 
-    @IBOutlet weak var cameraBrightness: UILabel!
+    @IBOutlet weak var feedbackLabel: UILabel!
+    
+    var currentBrightness: CGFloat = 0.0
+    
+    let captureSession = AVCaptureSession()
+    
+    // For testing purposes at first
+    var previewLayer:CALayer!
+    var captureDevice:AVCaptureDevice!
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        
     }
     
-    func captureOutput(_ captureOutput: AVCaptureOutput!, didOutputSampleBuffer sampleBuffer: CMSampleBuffer!, from connection: AVCaptureConnection!) {
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        prepareCamera()
+        
+        print("Starting")
+    }
+
+    func prepareCamera() {
+        captureSession.sessionPreset = AVCaptureSession.Preset.photo //used for photo. Will probably not be needed
+
+        let availableDevices = AVCaptureDevice.DiscoverySession(deviceTypes: [.builtInWideAngleCamera], mediaType: AVMediaType.video, position: .front).devices
+        captureDevice = availableDevices.first
+        beginSession()
+
+    }
+
+    func beginSession() {
+        do {
+            let captureDeviceInput = try AVCaptureDeviceInput(device: captureDevice)
+            captureSession.addInput(captureDeviceInput)
+        } catch {
+            print(error.localizedDescription)
+        }
+
+        let previewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
+        self.previewLayer = previewLayer
+        self.view.layer.addSublayer(self.previewLayer)
+        self.previewLayer.frame = self.view.layer.frame
+        captureSession.startRunning()
+
+        let dataOutput = AVCaptureVideoDataOutput()
+        dataOutput.videoSettings = [(kCVPixelBufferPixelFormatTypeKey as String): NSNumber(value: kCVPixelFormatType_32BGRA)]
+
+        dataOutput.alwaysDiscardsLateVideoFrames = true
+
+        if captureSession.canAddOutput(dataOutput) {
+            captureSession.addOutput(dataOutput)
+        }
+
+        captureSession.commitConfiguration()
+
+        let queue = DispatchQueue(label: "com.Muhammad.captureQueue")
+        dataOutput.setSampleBufferDelegate(self, queue: queue)
+
+    }
+
+    func stopCaptureSession() {
+        self.captureSession.stopRunning()
+        if let inputs = captureSession.inputs as? [AVCaptureDeviceInput] {
+            for input in inputs {
+                self.captureSession.removeInput(input)
+            }
+        }
+    }
+
+
+    func captureOutput(_ captureOutput: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
 
     //Retrieving EXIF data of camara frame buffer
         let rawMetadata = CMCopyDictionaryOfAttachments(allocator: nil, target: sampleBuffer, attachmentMode: CMAttachmentMode(kCMAttachmentMode_ShouldPropagate))
@@ -40,7 +100,7 @@ class FirstViewController: UIViewController {
         let luminosity : Double = (CalibrationConstant * FNumber * FNumber ) / ( ExposureTime * ISOSpeedRatings )
 
         print(luminosity)
-        
+
     }
     
 }
