@@ -31,7 +31,17 @@ class FirstViewController: UIViewController, AVCaptureVideoDataOutputSampleBuffe
         super.viewWillAppear(animated)
         prepareCamera()
         
+        self.view.backgroundColor = UIColor.black
+        feedbackLabel.textColor = UIColor.blue
+        feedbackLabel.backgroundColor = UIColor.init(white: 0, alpha: 1)
+        
         print("Starting")
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(false)
+        print("stopping")
+        stopCaptureSession()
     }
 
     func prepareCamera() {
@@ -51,10 +61,10 @@ class FirstViewController: UIViewController, AVCaptureVideoDataOutputSampleBuffe
             print(error.localizedDescription)
         }
 
-        let previewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
-        self.previewLayer = previewLayer
-        self.view.layer.addSublayer(self.previewLayer)
-        self.previewLayer.frame = self.view.layer.frame
+//        let previewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
+//        self.previewLayer = previewLayer
+//        self.view.layer.addSublayer(self.previewLayer)
+//        self.previewLayer.frame = self.view.layer.frame
         captureSession.startRunning()
 
         let dataOutput = AVCaptureVideoDataOutput()
@@ -78,6 +88,7 @@ class FirstViewController: UIViewController, AVCaptureVideoDataOutputSampleBuffe
         if let inputs = captureSession.inputs as? [AVCaptureDeviceInput] {
             for input in inputs {
                 self.captureSession.removeInput(input)
+                
             }
         }
     }
@@ -100,6 +111,13 @@ class FirstViewController: UIViewController, AVCaptureVideoDataOutputSampleBuffe
         let luminosity : Double = (CalibrationConstant * FNumber * FNumber ) / ( ExposureTime * ISOSpeedRatings )
 
         print(luminosity)
+        
+        DispatchQueue.main.sync {
+            feedbackLabel.text = "\(luminosity)"
+        }
+        
+        // make background dark/ black
+        
 
     }
     
