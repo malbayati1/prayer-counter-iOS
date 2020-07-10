@@ -13,9 +13,16 @@ import AVKit
 
 class FirstViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDelegate {
 
-    @IBOutlet weak var feedbackLabel: UILabel!
+    @IBOutlet weak var bowsLabel: UILabel!
+    @IBOutlet weak var bowsCounterLabel: UILabel!
+    @IBOutlet weak var prostrationsLabel: UILabel!
+    @IBOutlet weak var prostrationsCounterLabel: UILabel!
+    
+    
+    
     
     var currentBrightness: CGFloat = 0.0
+    var isProstrating: Bool = false
     
     let captureSession = AVCaptureSession()
     
@@ -32,15 +39,17 @@ class FirstViewController: UIViewController, AVCaptureVideoDataOutputSampleBuffe
         prepareCamera()
         
         self.view.backgroundColor = UIColor.black
-        feedbackLabel.textColor = UIColor.blue
-        feedbackLabel.backgroundColor = UIColor.init(white: 0, alpha: 1)
         
-        print("Starting")
+        prostrationsLabel.textColor = UIColor.white
+        prostrationsLabel.backgroundColor = UIColor.init(white: 0, alpha: 1)
+        
+        prostrationsCounterLabel.textColor = UIColor.white
+        prostrationsCounterLabel.backgroundColor = UIColor.init(white: 0, alpha: 1)
+        
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(false)
-        print("stopping")
         stopCaptureSession()
     }
 
@@ -112,14 +121,26 @@ class FirstViewController: UIViewController, AVCaptureVideoDataOutputSampleBuffe
 
         print(luminosity)
         
-        DispatchQueue.main.sync {
-            feedbackLabel.text = "\(luminosity)"
-        }
-        
-        // make background dark/ black
-        
+        checkIsProstrating(luminosity: luminosity)
 
     }
+    
+    func checkIsProstrating(luminosity: Double) {
+        if(luminosity < 10.0) {
+            isProstrating = true
+        } else {
+            isProstrating = false
+        }
+    }
+    
+    
+    @IBAction func decreaseCount(_ sender: Any) {
+    }
+    
+    
+    @IBAction func clearCount(_ sender: Any) {
+    }
+    
     
 }
 
